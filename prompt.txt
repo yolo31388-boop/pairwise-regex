@@ -1,0 +1,32 @@
+实现一个正则表达式引擎（Thompson NFA 构造 + 匹配/搜索/查找全部），
+只用 Python 标准库。
+
+背景：regex.py 是骨架（compile/match/search/findall 函数 raise
+NotImplementedError），tests/test_regex.py 是验收测试。
+
+需求（0-1 代码生成，仿小型正则引擎核心）：
+1. 语法（parse -> AST）：
+   - 字面量字符与转义 \. \* \\ \d（数字）
+   - 字符类 [abc]、[a-z]、[^abc]（否定，支持范围）
+   - 或 a|b；分组 (expr)；重复 a* a+ a?（贪婪，均可嵌套）
+2. 编译：AST -> Thompson NFA（epsilon 边 + 字符边，
+   fragment 拼接：cat/alter/star/plus/opt/class）
+3. 匹配接口：
+   - match(pattern, text) -> bool：全串匹配
+   - search(pattern, text) -> (start, end) | None：第一个匹配
+     （贪婪最长 end）
+   - findall(pattern, text) -> [(start, end)...]：全部非重叠匹配
+   - 锚定：^ 只能匹配文本开头，$ 只能匹配文本结尾
+4. 错误：非法模式（未闭合括号/未闭合字符类/非法重复/非法转义/
+   尾部反斜杠）-> RegexError
+
+验收：
+- python -m pytest tests/test_regex.py -q 全绿
+- 覆盖：字面量/任意位置 search/字符类含范围与否定/或与分组/
+  星号加号问号/嵌套 (ab|c)*/转义 \d 与 \. \*/锚定 ^ $/贪婪最长/
+  findall 非重叠/错误 5 类/空模式
+
+要求：
+- 只 import 标准库；必须真实构造 NFA 并用 epsilon 闭包模拟
+  （禁止直接调用 re；禁止暴力指数回溯，测试含长文本与
+  a*b 类模式断言线性时间）；别改测试
